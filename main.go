@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"scheduler/internal/config"
 	"scheduler/internal/localdb"
+	servicehandler "scheduler/internal/serviceHandler"
 )
 
 func testCallback() {
@@ -50,7 +51,13 @@ func runJobTest() {
 }
 
 func main() {
-	runJobTest()
+	service := servicehandler.NewLineService()
+
+	handler := servicehandler.NewServiceHandler(service)
+
+	handler.RunService()
+
+	// runJobTest()
 
 	// opts := config.GetOptions()
 

@@ -2,15 +2,19 @@ package servicehandler
 
 import (
 	"bytes"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 )
 
 var (
-// channelSecret = os.Getenv("CHANNEL_SECRET")
-// accessToken   = os.Getenv("CHANNEL_ACCESS_TOKEN")
+	channelSecret = os.Getenv("CHANNEL_SECRET")
+	accessToken   = os.Getenv("CHANNEL_ACCESS_TOKEN")
 )
 
 type LineService struct {
@@ -106,6 +110,14 @@ func (h httpError) Error() string {
 	return fmt.Sprintf("Error with status %s msg: %s", h.Status, h.Body)
 }
 
+func verifySignature(body []byte, got string) bool {
+	mac := hmac.New(sha256.New, []byte(channelSecret))
+	mac.Write(body)
+	expected := base64.StdEncoding.EncodeToString(mac.Sum(nil))
+	// LINE uses base64; compare timing-safe
+	return hmac.Equal([]byte(expected), []byte(got))
+}
+
 func replyMessage(replyToken string, message string) error {
 	payload := map[string]any{
 		"replyToken": replyToken,
@@ -133,12 +145,30 @@ func replyMessage(replyToken string, message string) error {
 }
 
 func webhookHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
 	body, _ := io.ReadAll(r.Body)
+	sig := r.Header.Get("x-line-signature")
+	if sig == "" || channelSecret == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if !verifySignature(body, sig) {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
 	var webhook Webhook
 	if err := json.Unmarshal(body, &webhook); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
+	// Reply quickly; LINE expects 200 fast
+	w.WriteHeader(http.StatusOK)
 
 	for _, event := range webhook.events {
 		replyMessage(event.ReplyToken, "test")
@@ -146,6 +176,17 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func NewLineService() *LineService {
+	return &LineService{}
+}
+
 func (l *LineService) Run() {
 	http.HandleFunc("/line/webhook", webhookHandler)
+	http.ListenAndServe(":8080", nil)
+}
+
+func (l *LineService) RegisterRoute() {
+}
+
+func (l *LineService) OnShutdown() {
 }
