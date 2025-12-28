@@ -9,10 +9,8 @@ import (
 )
 
 var (
-	// channelSecret = os.Getenv("CHANNEL_SECRET")
-	// accessToken   = os.Getenv("CHANNEL_ACCESS_TOKEN")
-	channelSecret = "780f8fa9113f355afe46861c22e8a44f"
-	accessToken   = "tfG+ZYuaUioLhgTVoRzNWdN5DrFikL+wqSPeo6KEcFzwucE6RSZ4M2B1CzlTKhOx+fTlHDri4QxbWxTt5zcqryoe7Zs2AsF5H/LlSw/GUgig8R9F3AAtpBf/kGi4mAFitCQW67hUK0zidLmhPtU2yAdB04t89/1O/w1cDnyilFU="
+// channelSecret = os.Getenv("CHANNEL_SECRET")
+// accessToken   = os.Getenv("CHANNEL_ACCESS_TOKEN")
 )
 
 type LineService struct {
