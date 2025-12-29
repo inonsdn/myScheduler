@@ -1,1 +1,1 @@
-web: ENV=prod ./app
+web: ENV=prod bin/web
