@@ -50,12 +50,19 @@ func runJobTest() {
 	// schedulerHandler.Stop(time.Second * 100)
 }
 
-func main() {
-	service := servicehandler.NewLineService()
+func runService() {
+	opts := config.GetOptions(config.SetPort())
+
+	service := servicehandler.NewLineService(opts)
 
 	handler := servicehandler.NewServiceHandler(service)
 
 	handler.RunService()
+}
+
+func main() {
+
+	runService()
 
 	// runJobTest()
 

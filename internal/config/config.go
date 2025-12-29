@@ -1,8 +1,18 @@
 package config
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
+// Main options for app
 type Options struct {
+	localDbOptions *LocalDbOptions
+	serverOptions  *ServerOptions
+	lineOptions    *LineOptions
+}
+
+type LocalDbOptions struct {
 	runningPort int
 	host        string
 	port        int
@@ -11,22 +21,40 @@ type Options struct {
 	dbName      string
 }
 
-type LocalDbOptions struct {
-	user     string
-	password string
-	dbName   string
-}
-
 type OptsFunc func(*Options)
 
 func defaultOptions() Options {
+	lineOptions := GetLineOptions()
+	serverOptions := GetServerOptions()
 	return Options{
-		runningPort: 8083,
-		host:        "localhost",
-		port:        3306,
-		user:        "root",
-		password:    "rootPass",
-		dbName:      "schedulerdb",
+		lineOptions:   lineOptions,
+		serverOptions: serverOptions,
+	}
+}
+
+func GetLineOptions() *LineOptions {
+	channelSecret := os.Getenv("CHANNEL_SECRET")
+	accessToken := os.Getenv("CHANNEL_ACCESS_TOKEN")
+	return &LineOptions{
+		webhookUrl:    "/line/webhook",
+		port:          8080,
+		channelSecret: channelSecret,
+		accessToken:   accessToken,
+	}
+}
+
+func GetServerOptions() *ServerOptions {
+	return &ServerOptions{
+		host: "localhost",
+		port: 8080,
+	}
+}
+
+func GetLocalDbOptions() *LocalDbOptions {
+	return &LocalDbOptions{
+		user:     "",
+		password: "",
+		dbName:   "",
 	}
 }
 
@@ -38,25 +66,57 @@ func GetOptions(funcs ...OptsFunc) *Options {
 	return &opts
 }
 
-func (o *Options) GetAddress() string {
-	return fmt.Sprintf("%s:%d", o.host, o.runningPort)
+func (l *LocalDbOptions) GetAddress() string {
+	return fmt.Sprintf("%s:%d", l.host, l.runningPort)
+}
+
+func (l *LocalDbOptions) DataSourceOptions() string {
+	return fmt.Sprintf(
+		"%s:%s@tcp(%s:%d)/%s?parseTime=true&charset=utf8mb4&loc=Local",
+		l.user,
+		l.password,
+		l.host,
+		l.port,
+		l.dbName,
+	)
+}
+
+func (o *Options) GetLineOptions() *LineOptions {
+	return o.lineOptions
+}
+
+func (o *Options) GetServerOptions() *ServerOptions {
+	return o.serverOptions
 }
 
 func (o *Options) GetLocalDbOptions() *LocalDbOptions {
-	return &LocalDbOptions{
-		user:     o.user,
-		password: o.password,
-		dbName:   o.dbName,
-	}
+	return o.localDbOptions
 }
 
-func (o *Options) DataSourceConfig() string {
-	return fmt.Sprintf(
-		"%s:%s@tcp(%s:%d)/%s?parseTime=true&charset=utf8mb4&loc=Local",
-		o.user,
-		o.password,
-		o.host,
-		o.port,
-		o.dbName,
-	)
+type LineOptions struct {
+	webhookUrl    string
+	port          int
+	channelSecret string
+	accessToken   string
+}
+
+func (l *LineOptions) GetWebhookUrl() string {
+	return l.webhookUrl
+}
+
+func (l *LineOptions) GetPort() int {
+	return l.port
+}
+
+func (l *LineOptions) GetChannelSecret() string {
+	return l.channelSecret
+}
+
+func (l *LineOptions) GetAccessToken() string {
+	return l.accessToken
+}
+
+type ServerOptions struct {
+	host string
+	port int
 }

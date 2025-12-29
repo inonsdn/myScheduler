@@ -41,7 +41,7 @@ func (h *HttpService) initServer() {
 }
 
 func (h *HttpService) Run() {
-	addr := h.opts.GetAddress()
+	addr := h.opts.GetLocalDbOptions().GetAddress()
 	fmt.Println("Run serve", addr)
 	if err := http.ListenAndServe(addr, h.serverMux); err != nil {
 		fmt.Println("Failed to run: ", err)

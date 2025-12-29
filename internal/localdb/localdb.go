@@ -28,7 +28,8 @@ type SqlResult interface {
 }
 
 func NewLocalDb(opts *config.Options) (*LocalDb, error) {
-	dsn := opts.DataSourceConfig()
+	o := opts.GetLocalDbOptions()
+	dsn := o.DataSourceOptions()
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
 		fmt.Println("Cannot open sql")

@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"scheduler/internal/config"
 )
 
 var (
@@ -18,6 +19,10 @@ var (
 )
 
 type LineService struct {
+	webhookUrl    string
+	port          int
+	channelSecret string
+	accessToken   string
 }
 
 type Webhook struct {
@@ -48,6 +53,7 @@ type Message struct {
 	Text            string `json:"text"`
 }
 
+// Example for payload from line
 // // When a user sends a text message containing mention and an emoji in a group chat
 // {
 //   "destination": "xxxxxxxxxx",
@@ -173,16 +179,23 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	for _, event := range webhook.events {
 		replyMessage(event.ReplyToken, "test")
 	}
-
 }
 
-func NewLineService() *LineService {
-	return &LineService{}
+func NewLineService(opts *config.Options) *LineService {
+	lineOpts := opts.GetLineOptions()
+	return &LineService{
+		webhookUrl:    lineOpts.GetWebhookUrl(),
+		port:          lineOpts.GetPort(),
+		channelSecret: lineOpts.GetChannelSecret(),
+		accessToken:   lineOpts.GetAccessToken(),
+	}
 }
 
 func (l *LineService) Run() {
-	http.HandleFunc("/line/webhook", webhookHandler)
-	http.ListenAndServe(":8080", nil)
+	http.HandleFunc(l.webhookUrl, webhookHandler)
+	runningPort := fmt.Sprintf(":%d", l.port)
+	fmt.Println("Run serve at ", runningPort)
+	http.ListenAndServe(runningPort, nil)
 }
 
 func (l *LineService) RegisterRoute() {
