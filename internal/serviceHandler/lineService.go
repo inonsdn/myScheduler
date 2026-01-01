@@ -26,7 +26,7 @@ type LineService struct {
 }
 
 type Webhook struct {
-	events []Events
+	events []Events `json:"events"`
 }
 
 type Events struct {
@@ -35,7 +35,7 @@ type Events struct {
 	Mode       string  `json:"mode"`
 	Timestamp  int     `json:"timestamp"`
 	Source     Source  `json:"source"`
-	EventId    string  `json:"eventId"`
+	EventId    string  `json:"webhookEventId"`
 	Message    Message `json:"message"`
 }
 
