@@ -158,10 +158,13 @@ func replyMessage(replyToken string, message string) error {
 }
 
 func webhookHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Got request")
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
+
+	fmt.Println("Got request 2")
 
 	body, _ := io.ReadAll(r.Body)
 	sig := r.Header.Get("x-line-signature")
@@ -169,10 +172,12 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	fmt.Println("Got request 3")
 	if !verifySignature(body, sig) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
+	fmt.Println("Got request 4", body)
 
 	var webhook Webhook
 	if err := json.Unmarshal(body, &webhook); err != nil {
