@@ -107,6 +107,13 @@ type Message struct {
 //   ]
 // }
 
+func (w *Webhook) PrintStat() {
+	fmt.Println("Webhook event num: ", len(w.events))
+	for _, event := range w.events {
+		fmt.Printf("Event: Type: %s, Mode: %s, Message: %s", event.Type, event.Mode, event.Message)
+	}
+}
+
 type httpError struct {
 	Status string
 	Body   string
@@ -172,6 +179,8 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
+	webhook.PrintStat()
 
 	// Reply quickly; LINE expects 200 fast
 	w.WriteHeader(http.StatusOK)
