@@ -193,7 +193,7 @@ func NewLineService(opts *config.Options) *LineService {
 
 func (l *LineService) Run() {
 	http.HandleFunc(l.webhookUrl, webhookHandler)
-	runningPort := fmt.Sprintf(":%d", l.port)
+	runningPort := fmt.Sprintf("0.0.0.0:%d", l.port)
 	fmt.Println("Run serve at ", runningPort)
 	http.ListenAndServe(runningPort, nil)
 }
