@@ -26,7 +26,7 @@ type LineService struct {
 }
 
 type Webhook struct {
-	events []Events `json:"events"`
+	Events []Events `json:"events"`
 }
 
 type Events struct {
