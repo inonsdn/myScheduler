@@ -37,7 +37,7 @@ func GetLineOptions() *LineOptions {
 	accessToken := os.Getenv("CHANNEL_ACCESS_TOKEN")
 	return &LineOptions{
 		webhookUrl:    "/webhook",
-		port:          8080,
+		port:          3000,
 		channelSecret: channelSecret,
 		accessToken:   accessToken,
 	}

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 )
@@ -11,7 +12,9 @@ func SetPort() OptsFunc {
 		port := os.Getenv("PORT")
 		port_int, err := strconv.Atoi(port)
 		if err != nil {
-			o.port = 8080
+			fmt.Println("Error when set port: ", err)
+			o.port = 8081
+			return
 		}
 		o.port = int(port_int)
 	}
