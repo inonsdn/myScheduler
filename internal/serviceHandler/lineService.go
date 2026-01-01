@@ -108,8 +108,8 @@ type Message struct {
 // }
 
 func (w *Webhook) PrintStat() {
-	fmt.Println("Webhook event num: ", len(w.events))
-	for _, event := range w.events {
+	fmt.Println("Webhook event num: ", len(w.Events))
+	for _, event := range w.Events {
 		fmt.Printf("Event: Type: %s, Mode: %s, Message: %s", event.Type, event.Mode, event.Message)
 	}
 }
@@ -191,7 +191,7 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	// Reply quickly; LINE expects 200 fast
 	w.WriteHeader(http.StatusOK)
 
-	for _, event := range webhook.events {
+	for _, event := range webhook.Events {
 		replyMessage(event.ReplyToken, "test")
 	}
 }
