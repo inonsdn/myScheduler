@@ -1,15 +1,18 @@
 package config
 
-import "os"
+import (
+	"os"
+	"strconv"
+)
 
 func SetPort() OptsFunc {
 	return func(opts *Options) {
 		o := opts.serverOptions
-		env := os.Getenv("ENV")
-		if env == "prod" {
-			o.port = 443
-		} else {
+		port := os.Getenv("PORT")
+		port_int, err := strconv.Atoi(port)
+		if err != nil {
 			o.port = 8080
 		}
+		o.port = int(port_int)
 	}
 }
