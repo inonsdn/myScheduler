@@ -1,0 +1,13 @@
+##############################
+#
+#   How to run docker
+#
+
+# Set up docker by
+brew install --cask docker
+
+# open docker
+open -a docker
+
+# build image
+docker build -t <name> . 
