@@ -19,10 +19,11 @@ var (
 )
 
 type LineService struct {
-	webhookUrl    string
-	port          int
-	channelSecret string
-	accessToken   string
+	webhookUrl       string
+	port             int
+	channelSecret    string
+	accessToken      string
+	messageProcessor *MessageProcessor
 }
 
 type Webhook struct {
@@ -157,57 +158,61 @@ func replyMessage(replyToken string, message string) error {
 	return nil
 }
 
-func webhookHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Got request")
+func (l *LineService) webhookHandler(w http.ResponseWriter, r *http.Request) {
+	// expected method must be POST method only
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
 
-	fmt.Println("Got request 2")
-
+	// read body from request
 	body, _ := io.ReadAll(r.Body)
+
+	// get signature from header
 	sig := r.Header.Get("x-line-signature")
 	if sig == "" || channelSecret == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	fmt.Println("Got request 3")
+
+	// verify signature
 	if !verifySignature(body, sig) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	fmt.Println("Got request 4", body)
 
+	// process json body to webhook info
 	var webhook Webhook
 	if err := json.Unmarshal(body, &webhook); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	fmt.Println("Got request 5", webhook, &webhook)
+	// show stat
 	webhook.PrintStat()
 
 	// Reply quickly; LINE expects 200 fast
 	w.WriteHeader(http.StatusOK)
 
 	for _, event := range webhook.Events {
-		replyMessage(event.ReplyToken, "test")
+		l.messageProcessor.Response(event)
+		// replyMessage(event.ReplyToken, "test")
 	}
 }
 
 func NewLineService(opts *config.Options) *LineService {
 	lineOpts := opts.GetLineOptions()
 	return &LineService{
-		webhookUrl:    lineOpts.GetWebhookUrl(),
-		port:          lineOpts.GetPort(),
-		channelSecret: lineOpts.GetChannelSecret(),
-		accessToken:   lineOpts.GetAccessToken(),
+		webhookUrl:       lineOpts.GetWebhookUrl(),
+		port:             lineOpts.GetPort(),
+		channelSecret:    lineOpts.GetChannelSecret(),
+		accessToken:      lineOpts.GetAccessToken(),
+		messageProcessor: &MessageProcessor{},
 	}
 }
 
 func (l *LineService) Run() {
-	http.HandleFunc(l.webhookUrl, webhookHandler)
+	http.HandleFunc(l.webhookUrl, l.webhookHandler)
 	runningPort := fmt.Sprintf("0.0.0.0:%d", l.port)
 	fmt.Println("Run serve at ", runningPort)
 	http.ListenAndServe(runningPort, nil)
