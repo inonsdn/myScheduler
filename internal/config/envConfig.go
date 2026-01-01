@@ -8,7 +8,7 @@ import (
 
 func SetPort() OptsFunc {
 	return func(opts *Options) {
-		o := opts.serverOptions
+		o := opts.lineOptions
 		port := os.Getenv("PORT")
 		port_int, err := strconv.Atoi(port)
 		if err != nil {
