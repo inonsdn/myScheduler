@@ -171,12 +171,14 @@ func (l *LineService) webhookHandler(w http.ResponseWriter, r *http.Request) {
 	// get signature from header
 	sig := r.Header.Get("x-line-signature")
 	if sig == "" || channelSecret == "" {
+		fmt.Println("No signature found")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	// verify signature
 	if !verifySignature(body, sig) {
+		fmt.Println("Unauthorized signature")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -184,6 +186,7 @@ func (l *LineService) webhookHandler(w http.ResponseWriter, r *http.Request) {
 	// process json body to webhook info
 	var webhook Webhook
 	if err := json.Unmarshal(body, &webhook); err != nil {
+		fmt.Println("Packet decrypt failed")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -211,16 +214,7 @@ func NewLineService(opts *config.Options) *LineService {
 }
 
 func (l *LineService) InitLineRoute() ServerMuxFuncs {
-	return func() *MuxConfig {
-		serverMux := http.NewServeMux()
-
-		serverMux.Handle("/", http.HandlerFunc(l.webhookHandler))
-		muxHandler := http.StripPrefix(l.webhookUrl, serverMux)
-
-		return &MuxConfig{
-			Pattern: l.webhookUrl,
-			Mux:     muxHandler,
-			Func:    http.HandlerFunc(l.webhookHandler),
-		}
+	return func(m *http.ServeMux) {
+		m.Handle(l.webhookUrl, http.HandlerFunc(l.webhookHandler))
 	}
 }

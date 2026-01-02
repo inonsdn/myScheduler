@@ -21,7 +21,7 @@ func (m *MuxConfig) SetHandle(baseMux *http.ServeMux) {
 	baseMux.Handle(m.Pattern, m.Mux)
 }
 
-type ServerMuxFuncs func() *MuxConfig
+type ServerMuxFuncs func(*http.ServeMux)
 
 func NewHttpService(opts *config.ServerOptions, muxFuncs ...ServerMuxFuncs) *HttpService {
 	httpService := HttpService{
@@ -50,9 +50,7 @@ func (h *HttpService) initServer(muxFuncs ...ServerMuxFuncs) {
 	serverMux.Handle("/auth/", authHandler)
 
 	for _, muxFunc := range muxFuncs {
-		muxConfig := muxFunc()
-		fmt.Println("Init server webhook")
-		serverMux.Handle(muxConfig.Pattern, muxConfig.Mux)
+		muxFunc(serverMux)
 	}
 	h.serverMux = serverMux
 }
