@@ -27,7 +27,7 @@ func NewHttpService(opts *config.ServerOptions, muxFuncs ...ServerMuxFuncs) *Htt
 		opts: opts,
 	}
 
-	httpService.initServer()
+	httpService.initServer(muxFuncs...)
 	return &httpService
 }
 
