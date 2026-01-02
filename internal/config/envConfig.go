@@ -9,8 +9,8 @@ import (
 func SetHost() OptsFunc {
 	return func(opts *Options) {
 		o := opts.serverOptions
-		env := os.Getenv("ENV")
-		if env == "prod" {
+		mode := os.Getenv("RUN_MODE")
+		if mode == "prod" {
 			o.host = "0.0.0.0"
 		} else {
 			o.host = "localhost"

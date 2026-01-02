@@ -12,5 +12,6 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /app .
 FROM gcr.io/distroless/base-debian12
 WORKDIR /
 COPY --from=build /app /app
+ENV RUN_MODE="prod"
 EXPOSE 8080
 ENTRYPOINT ["/app"]
