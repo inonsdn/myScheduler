@@ -14,6 +14,7 @@ type HttpService struct {
 type MuxConfig struct {
 	Pattern string
 	Mux     http.Handler
+	Func    http.Handler
 }
 
 func (m *MuxConfig) SetHandle(baseMux *http.ServeMux) {
@@ -50,7 +51,8 @@ func (h *HttpService) initServer(muxFuncs ...ServerMuxFuncs) {
 
 	for _, muxFunc := range muxFuncs {
 		muxConfig := muxFunc()
-		serverMux.Handle("/webhook", muxConfig.Mux)
+		serverMux.Handle("/webhook", muxConfig.Func)
+		fmt.Println("Init server webhook")
 		// muxConfig.SetHandle(serverMux)
 	}
 	h.serverMux = serverMux
