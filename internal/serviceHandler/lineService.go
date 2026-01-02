@@ -211,13 +211,13 @@ func NewLineService(opts *config.Options) *LineService {
 }
 
 func (l *LineService) InitLineRoute() ServerMuxFuncs {
-	return func() MuxConfig {
+	return func() *MuxConfig {
 		serverMux := http.NewServeMux()
 
 		serverMux.Handle("/", http.HandlerFunc(l.webhookHandler))
 		muxHandler := http.StripPrefix(l.webhookUrl, serverMux)
 
-		return MuxConfig{
+		return &MuxConfig{
 			Pattern: l.webhookUrl,
 			Mux:     muxHandler,
 			Func:    http.HandlerFunc(l.webhookHandler),

@@ -21,7 +21,7 @@ func (m *MuxConfig) SetHandle(baseMux *http.ServeMux) {
 	baseMux.Handle(m.Pattern, m.Mux)
 }
 
-type ServerMuxFuncs func() MuxConfig
+type ServerMuxFuncs func() *MuxConfig
 
 func NewHttpService(opts *config.ServerOptions, muxFuncs ...ServerMuxFuncs) *HttpService {
 	httpService := HttpService{
@@ -52,7 +52,7 @@ func (h *HttpService) initServer(muxFuncs ...ServerMuxFuncs) {
 	for _, muxFunc := range muxFuncs {
 		muxConfig := muxFunc()
 		fmt.Println("Init server webhook")
-		muxConfig.SetHandle(serverMux)
+		serverMux.Handle(muxConfig.Pattern, muxConfig.Mux)
 	}
 	h.serverMux = serverMux
 }
