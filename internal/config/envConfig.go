@@ -6,9 +6,21 @@ import (
 	"strconv"
 )
 
+func SetHost() OptsFunc {
+	return func(opts *Options) {
+		o := opts.serverOptions
+		env := os.Getenv("ENV")
+		if env == "prod" {
+			o.host = "0.0.0.0"
+		} else {
+			o.host = "localhost"
+		}
+	}
+}
+
 func SetPort() OptsFunc {
 	return func(opts *Options) {
-		o := opts.lineOptions
+		o := opts.serverOptions
 		port := os.Getenv("PORT")
 		port_int, err := strconv.Atoi(port)
 		if err != nil {

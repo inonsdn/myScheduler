@@ -120,3 +120,15 @@ type ServerOptions struct {
 	host string
 	port int
 }
+
+func (s *ServerOptions) GetHost() string {
+	return s.host
+}
+
+func (s *ServerOptions) GetPort() int {
+	return s.port
+}
+
+func (s *ServerOptions) GetAddress() string {
+	return fmt.Sprintf("%s:%d", s.host, s.port)
+}

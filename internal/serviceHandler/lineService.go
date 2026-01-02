@@ -196,7 +196,6 @@ func (l *LineService) webhookHandler(w http.ResponseWriter, r *http.Request) {
 
 	for _, event := range webhook.Events {
 		l.messageProcessor.Response(event)
-		// replyMessage(event.ReplyToken, "test")
 	}
 }
 
@@ -211,15 +210,16 @@ func NewLineService(opts *config.Options) *LineService {
 	}
 }
 
-func (l *LineService) Run() {
-	http.HandleFunc(l.webhookUrl, l.webhookHandler)
-	runningPort := fmt.Sprintf("0.0.0.0:%d", l.port)
-	fmt.Println("Run serve at ", runningPort)
-	http.ListenAndServe(runningPort, nil)
-}
+func (l *LineService) InitLineRoute() ServerMuxFuncs {
+	return func() MuxConfig {
+		serverMux := http.NewServeMux()
 
-func (l *LineService) RegisterRoute() {
-}
+		serverMux.Handle("/", http.HandlerFunc(l.webhookHandler))
+		muxHandler := http.StripPrefix(l.webhookUrl, serverMux)
 
-func (l *LineService) OnShutdown() {
+		return MuxConfig{
+			Pattern: "/webhook/",
+			Mux:     muxHandler,
+		}
+	}
 }

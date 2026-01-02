@@ -7,11 +7,22 @@ import (
 )
 
 type HttpService struct {
-	opts      *config.Options
+	opts      *config.ServerOptions
 	serverMux *http.ServeMux
 }
 
-func NewHttpService(opts *config.Options) *HttpService {
+type MuxConfig struct {
+	Pattern string
+	Mux     http.Handler
+}
+
+func (m *MuxConfig) SetHandle(baseMux *http.ServeMux) {
+	baseMux.Handle(m.Pattern, m.Mux)
+}
+
+type ServerMuxFuncs func() MuxConfig
+
+func NewHttpService(opts *config.ServerOptions, muxFuncs ...ServerMuxFuncs) *HttpService {
 	httpService := HttpService{
 		opts: opts,
 	}
@@ -20,7 +31,7 @@ func NewHttpService(opts *config.Options) *HttpService {
 	return &httpService
 }
 
-func (h *HttpService) initServer() {
+func (h *HttpService) initServer(muxFuncs ...ServerMuxFuncs) {
 	serverMux := http.NewServeMux()
 
 	// register handler function for each part
@@ -37,11 +48,15 @@ func (h *HttpService) initServer() {
 	// set middleware
 	serverMux.Handle("/auth/", authHandler)
 
+	for _, muxFunc := range muxFuncs {
+		muxConfig := muxFunc()
+		muxConfig.SetHandle(serverMux)
+	}
 	h.serverMux = serverMux
 }
 
 func (h *HttpService) Run() {
-	addr := h.opts.GetLocalDbOptions().GetAddress()
+	addr := h.opts.GetAddress()
 	fmt.Println("Run serve", addr)
 	if err := http.ListenAndServe(addr, h.serverMux); err != nil {
 		fmt.Println("Failed to run: ", err)

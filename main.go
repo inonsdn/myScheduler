@@ -51,9 +51,11 @@ func runJobTest() {
 }
 
 func runService() {
-	opts := config.GetOptions(config.SetPort())
+	opts := config.GetOptions(config.SetHost(), config.SetPort())
 
-	service := servicehandler.NewLineService(opts)
+	lineService := servicehandler.NewLineService(opts)
+
+	service := servicehandler.NewHttpService(opts.GetServerOptions(), lineService.InitLineRoute())
 
 	handler := servicehandler.NewServiceHandler(service)
 
