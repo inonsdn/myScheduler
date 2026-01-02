@@ -215,10 +215,10 @@ func (l *LineService) InitLineRoute() ServerMuxFuncs {
 		serverMux := http.NewServeMux()
 
 		serverMux.Handle("/", http.HandlerFunc(l.webhookHandler))
-		muxHandler := http.StripPrefix("/webhook", serverMux)
+		muxHandler := http.StripPrefix(l.webhookUrl, serverMux)
 
 		return MuxConfig{
-			Pattern: "/webhook/",
+			Pattern: l.webhookUrl,
 			Mux:     muxHandler,
 			Func:    http.HandlerFunc(l.webhookHandler),
 		}
