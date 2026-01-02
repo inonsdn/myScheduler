@@ -50,7 +50,8 @@ func (h *HttpService) initServer(muxFuncs ...ServerMuxFuncs) {
 
 	for _, muxFunc := range muxFuncs {
 		muxConfig := muxFunc()
-		muxConfig.SetHandle(serverMux)
+		serverMux.Handle("/webhook", muxConfig.Mux)
+		// muxConfig.SetHandle(serverMux)
 	}
 	h.serverMux = serverMux
 }
