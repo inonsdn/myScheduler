@@ -11,8 +11,18 @@ import (
 
 type UserState struct {
 	name     string
-	date     int
-	repeatly bool
+	date     string
+	repeatly string
+}
+
+func (u *UserState) Update(key string, value string) {
+	if key == "name" {
+		u.name = value
+	} else if key == "date" {
+		u.date = value
+	} else if key == "repeatly" {
+		u.repeatly = value
+	}
 }
 
 type MessageProcessor struct {
@@ -159,6 +169,11 @@ func (m *MessageProcessor) Response(event Events) {
 	replyToken := event.ReplyToken
 	userId := event.Source.UserId
 
+	if event.Type == "postback" {
+		m.responsePostback(userId, replyToken, event.Postback)
+		return
+	}
+
 	if event.Message.Text == "REGISTER" {
 		m.messageHandler_register(userId, replyToken)
 	} else if event.Message.Text == "NEW_JOB" {
@@ -171,6 +186,22 @@ func (m *MessageProcessor) Response(event Events) {
 		payload := constructMessageResponse(replyToken, "not match")
 		m.replyWtihMessage(payload)
 	}
+}
+
+func (m *MessageProcessor) responsePostback(userId string, replyToken string, postback Postback) {
+	userState := m.getUserState(userId)
+	var msg string
+	if postback.Data == "job:submit=1" {
+		msg = fmt.Sprintf("Create Job: name: %s, date: %s", userState.name, userState.date)
+		delete(m.userIdToState, userId)
+	} else {
+		for k, v := range postback.Params {
+			userState.Update(k, v)
+		}
+		msg = fmt.Sprintf("Job: name: %s, date: %s", userState.name, userState.date)
+	}
+	payload := constructMessageResponse(replyToken, msg)
+	m.replyWtihMessage(payload)
 }
 
 func (m *MessageProcessor) messageHandler_register(userId string, replyToken string) {
