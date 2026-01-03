@@ -188,6 +188,22 @@ func (m *MessageProcessor) Response(event Events) {
 	replyToken := event.ReplyToken
 	userId := event.Source.UserId
 
+	if m.responseCaching(event) {
+		return
+	}
+
+	if event.Type == "postback" {
+		m.responsePostbackType(userId, replyToken, event.Postback)
+		return
+	} else {
+		m.responseMessageType(userId, replyToken, event.Message)
+	}
+}
+
+func (m *MessageProcessor) responseCaching(event Events) bool {
+	replyToken := event.ReplyToken
+	userId := event.Source.UserId
+	// check that is there session still waiting for message or not
 	if !m.isActionDone(userId) {
 		userState := m.getUserState(userId)
 		if userState.isWaitingTyping {
@@ -200,21 +216,20 @@ func (m *MessageProcessor) Response(event Events) {
 			}
 			payload := constructMessageResponse(replyToken, msg)
 			m.replyWtihMessage(payload)
-			return
+			return true
 		}
 	}
+	return false
+}
 
-	if event.Type == "postback" {
-		m.responsePostback(userId, replyToken, event.Postback)
-		return
-	}
+func (m *MessageProcessor) responseMessageType(userId string, replyToken string, message Message) {
 
-	if event.Message.Text == "REGISTER" {
+	if message.Text == "REGISTER" {
 		m.messageHandler_register(userId, replyToken)
-	} else if event.Message.Text == "NEW_JOB" {
+	} else if message.Text == "NEW_JOB" {
 		payload := constructMessageResponse(replyToken, "new")
 		m.replyWtihMessage(payload)
-	} else if event.Message.Text == "SHOW_ALL_JOB" {
+	} else if message.Text == "SHOW_ALL_JOB" {
 		payload := constructMessageResponse(replyToken, "Your job")
 		m.replyWtihMessage(payload)
 	} else {
@@ -223,7 +238,7 @@ func (m *MessageProcessor) Response(event Events) {
 	}
 }
 
-func (m *MessageProcessor) responsePostback(userId string, replyToken string, postback Postback) {
+func (m *MessageProcessor) responsePostbackType(userId string, replyToken string, postback Postback) {
 	userState := m.getUserState(userId)
 	var msg string
 	if postback.Data == "job:submit=1" {
