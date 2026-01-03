@@ -53,7 +53,17 @@ func runJobTest() {
 func runService() {
 	opts := config.GetOptions(config.SetHost(), config.SetPort())
 
-	lineService := servicehandler.NewLineService(opts)
+	// localDb, err := localdb.NewLocalDb(opts)
+	// if err != nil {
+	// 	fmt.Println("Found error when connect to local db", err)
+	// 	return
+	// }
+	// if err := localDb.InitializeSchema(); err != nil {
+	// 	fmt.Println("Found error when init to local db", err)
+	// 	return
+	// }
+	msgProcessor := servicehandler.NewMessageProcessor(nil)
+	lineService := servicehandler.NewLineService(opts, msgProcessor)
 
 	service := servicehandler.NewHttpService(opts.GetServerOptions(), lineService.InitLineRoute())
 

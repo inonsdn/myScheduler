@@ -202,14 +202,14 @@ func (l *LineService) webhookHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func NewLineService(opts *config.Options) *LineService {
+func NewLineService(opts *config.Options, messageProcessor *MessageProcessor) *LineService {
 	lineOpts := opts.GetLineOptions()
 	return &LineService{
 		webhookUrl:       lineOpts.GetWebhookUrl(),
 		port:             lineOpts.GetPort(),
 		channelSecret:    lineOpts.GetChannelSecret(),
 		accessToken:      lineOpts.GetAccessToken(),
-		messageProcessor: &MessageProcessor{},
+		messageProcessor: messageProcessor,
 	}
 }
 
