@@ -51,7 +51,7 @@ func ConstructResponse(replyToken string, flexContents any, altText string) repl
 
 func constructMessageResponse(replyToken string, message string) replyBody {
 	msg := map[string]any{
-		"type": "flex",
+		"type": "text",
 		"text": message,
 	}
 	return replyBody{
