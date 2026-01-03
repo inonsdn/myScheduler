@@ -51,6 +51,56 @@ func BuildCreateJobFlex() map[string]any {
 			"contents": []any{
 				map[string]any{"type": "text", "text": "Create Job", "weight": "bold", "size": "xl"},
 				map[string]any{
+					"type":    "box",
+					"layout":  "vertical",
+					"spacing": "sm",
+					"contents": []any{
+						map[string]any{"type": "text", "text": "Name", "weight": "bold"},
+						map[string]any{
+							"type":    "box",
+							"layout":  "horizontal",
+							"spacing": "sm",
+							"contents": []any{
+								map[string]any{
+									"type":   "button",
+									"height": "sm",
+									"action": map[string]any{"type": "postback", "label": "Water", "data": "job:name=Water"},
+								},
+								map[string]any{
+									"type":   "button",
+									"height": "sm",
+									"action": map[string]any{"type": "postback", "label": "Pay rent", "data": "job:name=PayRent"},
+								},
+							},
+						},
+						map[string]any{
+							"type":   "button",
+							"height": "sm",
+							"action": map[string]any{"type": "postback", "label": "Other (type)", "data": "job:name=OTHER"},
+						},
+					},
+				},
+
+				map[string]any{
+					"type":    "box",
+					"layout":  "vertical",
+					"spacing": "sm",
+					"contents": []any{
+						map[string]any{"type": "text", "text": "Date", "weight": "bold"},
+						map[string]any{
+							"type":   "button",
+							"height": "sm",
+							"action": map[string]any{
+								"type":  "datetimepicker",
+								"label": "Pick date",
+								"data":  "job:pick=date",
+								"mode":  "date",
+							},
+						},
+					},
+				},
+
+				map[string]any{
 					"type":  "button",
 					"style": "primary",
 					"action": map[string]any{
@@ -59,7 +109,6 @@ func BuildCreateJobFlex() map[string]any {
 						"data":  "job:submit=1",
 					},
 				},
-				// add your date/time/repeat buttons here...
 			},
 		},
 	}
