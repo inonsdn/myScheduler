@@ -3,13 +3,21 @@ package servicehandler
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"scheduler/internal/localdb"
 )
 
+type UserState struct {
+	name     string
+	date     int
+	repeatly bool
+}
+
 type MessageProcessor struct {
-	localdb *localdb.LocalDb
+	localdb       *localdb.LocalDb
+	userIdToState map[string]*UserState
 }
 
 type replyBody struct {
@@ -35,6 +43,17 @@ func ConstructResponse(replyToken string, flexContents any, altText string) repl
 		"contents": flexContents, // bubble JSON object
 	}
 
+	return replyBody{
+		ReplyToken: replyToken,
+		Messages:   []interface{}{msg},
+	}
+}
+
+func constructMessageResponse(replyToken string, message string) replyBody {
+	msg := map[string]any{
+		"type": "flex",
+		"text": message,
+	}
 	return replyBody{
 		ReplyToken: replyToken,
 		Messages:   []interface{}{msg},
@@ -120,29 +139,56 @@ func NewMessageProcessor(localdb *localdb.LocalDb) *MessageProcessor {
 	}
 }
 
+func (m *MessageProcessor) getUserState(userId string) *UserState {
+	userState, ok := m.userIdToState[userId]
+	if !ok {
+		newUserState := UserState{}
+		m.userIdToState[userId] = &newUserState
+		return &newUserState
+	}
+	return userState
+}
+
+func (m *MessageProcessor) isActionDone(userId string) bool {
+	_, ok := m.userIdToState[userId]
+	return !ok
+}
+
 func (m *MessageProcessor) Response(event Events) {
 	replyToken := event.ReplyToken
+	userId := event.Source.UserId
+
 	if event.Message.Text == "REGISTER" {
-		m.replyWtihMessage(replyToken, "registered")
+		m.messageHandler_register(userId, replyToken)
 	} else if event.Message.Text == "NEW_JOB" {
-		m.replyWtihMessage(replyToken, "registered")
+		payload := constructMessageResponse(replyToken, "new")
+		m.replyWtihMessage(payload)
 	} else if event.Message.Text == "SHOW_ALL_JOB" {
-		m.replyWtihMessage(replyToken, "Here is registered job:")
+		payload := constructMessageResponse(replyToken, "Your job")
+		m.replyWtihMessage(payload)
 	} else {
-		m.replyWtihMessage(replyToken, "Not match")
+		payload := constructMessageResponse(replyToken, "not match")
+		m.replyWtihMessage(payload)
 	}
 }
 
-func (m *MessageProcessor) replyWtihMessage(replyToken string, message string) error {
-	// payload := map[string]any{
-	// 	"replyToken": replyToken,
-	// 	"messages": []map[string]any{
-	// 		{"type": "text", "text": message},
-	// 	},
-	// }
+func (m *MessageProcessor) messageHandler_register(userId string, replyToken string) {
+	if !m.isActionDone(userId) {
+		userState := m.getUserState(userId)
+		payload := constructMessageResponse(replyToken, fmt.Sprintf("Select in previous flex box, your information is name: %s, date: %v", userState.name, userState.date))
+		m.replyWtihMessage(payload)
+		return
+	}
+	userState := m.getUserState(userId)
 
+	fmt.Println(userState.name)
 	flexContent := BuildCreateJobFlex()
-	payload := ConstructResponse(replyToken, flexContent, message)
+	payload := ConstructResponse(replyToken, flexContent, "Create Job")
+
+	m.replyWtihMessage(payload)
+}
+
+func (m *MessageProcessor) replyWtihMessage(payload replyBody) error {
 
 	b, _ := json.Marshal(payload)
 
