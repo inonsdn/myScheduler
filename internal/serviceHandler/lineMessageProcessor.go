@@ -10,9 +10,11 @@ import (
 )
 
 type UserState struct {
-	name     string
-	date     string
-	repeatly string
+	name            string
+	date            string
+	message         string
+	isWaitingTyping bool
+	repeatly        string
 }
 
 func (u *UserState) Update(key string, value string) {
@@ -22,6 +24,9 @@ func (u *UserState) Update(key string, value string) {
 		u.date = value
 	} else if key == "repeatly" {
 		u.repeatly = value
+	} else if key == "message" {
+		u.message = value
+		u.isWaitingTyping = true
 	}
 }
 
@@ -123,8 +128,22 @@ func BuildCreateJobFlex() map[string]any {
 								"type":  "datetimepicker",
 								"label": "Pick date",
 								"data":  "job:pick=date",
-								"mode":  "date",
+								"mode":  "datetime",
 							},
+						},
+					},
+				},
+
+				map[string]any{
+					"type":    "box",
+					"layout":  "vertical",
+					"spacing": "sm",
+					"contents": []any{
+						map[string]any{"type": "text", "text": "Reminder Message", "weight": "bold"},
+						map[string]any{
+							"type":   "button",
+							"height": "sm",
+							"action": map[string]any{"type": "postback", "label": "Set message", "data": "job:message=message"},
 						},
 					},
 				},
@@ -169,6 +188,18 @@ func (m *MessageProcessor) Response(event Events) {
 	replyToken := event.ReplyToken
 	userId := event.Source.UserId
 
+	if !m.isActionDone(userId) {
+		userState := m.getUserState(userId)
+		if userState.isWaitingTyping {
+			userState.Update("message", event.Message.Text)
+			userState.isWaitingTyping = false
+			msg := fmt.Sprintf("Job: name: %s, date: %s, message: %s", userState.name, userState.date, userState.message)
+			payload := constructMessageResponse(replyToken, msg)
+			m.replyWtihMessage(payload)
+			return
+		}
+	}
+
 	if event.Type == "postback" {
 		m.responsePostback(userId, replyToken, event.Postback)
 		return
@@ -192,13 +223,13 @@ func (m *MessageProcessor) responsePostback(userId string, replyToken string, po
 	userState := m.getUserState(userId)
 	var msg string
 	if postback.Data == "job:submit=1" {
-		msg = fmt.Sprintf("Create Job: name: %s, date: %s", userState.name, userState.date)
+		msg = fmt.Sprintf("Create Job: name: %s, date: %s, message: %s", userState.name, userState.date, userState.message)
 		delete(m.userIdToState, userId)
 	} else {
 		for k, v := range postback.Params {
 			userState.Update(k, v)
 		}
-		msg = fmt.Sprintf("Job: name: %s, date: %s", userState.name, userState.date)
+		msg = fmt.Sprintf("Job: name: %s, date: %s, message: %s", userState.name, userState.date, userState.message)
 	}
 	payload := constructMessageResponse(replyToken, msg)
 	m.replyWtihMessage(payload)
