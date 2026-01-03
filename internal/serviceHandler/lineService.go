@@ -31,13 +31,19 @@ type Webhook struct {
 }
 
 type Events struct {
-	ReplyToken string  `json:"replyToken"`
-	Type       string  `json:"type"`
-	Mode       string  `json:"mode"`
-	Timestamp  int     `json:"timestamp"`
-	Source     Source  `json:"source"`
-	EventId    string  `json:"webhookEventId"`
-	Message    Message `json:"message"`
+	ReplyToken string   `json:"replyToken"`
+	Type       string   `json:"type"`
+	Mode       string   `json:"mode"`
+	Timestamp  int      `json:"timestamp"`
+	Source     Source   `json:"source"`
+	EventId    string   `json:"webhookEventId"`
+	Message    Message  `json:"message"`
+	Postback   Postback `json:"postback"`
+}
+
+type Postback struct {
+	Data   string            `json:"data"`
+	Params map[string]string `json:"params"`
 }
 
 type Source struct {
@@ -107,11 +113,12 @@ type Message struct {
 //     }
 //   ]
 // }
+// event.postback.data
 
 func (w *Webhook) PrintStat() {
 	fmt.Println("Webhook event num: ", len(w.Events))
 	for _, event := range w.Events {
-		fmt.Printf("Event: Type: %s, Mode: %s, Message: %s, %v", event.Type, event.Mode, event.Message.Text, event.Message.Type)
+		fmt.Printf("Event: Type: %s, Mode: %s, Message: %s, %v, %v", event.Type, event.Mode, event.Message.Text, event.Message.Type, event.Postback)
 	}
 }
 
