@@ -135,7 +135,8 @@ func BuildCreateJobFlex() map[string]any {
 
 func NewMessageProcessor(localdb *localdb.LocalDb) *MessageProcessor {
 	return &MessageProcessor{
-		localdb: localdb,
+		localdb:       localdb,
+		userIdToState: map[string]*UserState{},
 	}
 }
 
