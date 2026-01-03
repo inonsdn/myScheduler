@@ -20,13 +20,13 @@ type UserState struct {
 func (u *UserState) Update(key string, value string) {
 	if key == "name" {
 		u.name = value
-	} else if key == "date" {
+	} else if key == "datetime" {
 		u.date = value
 	} else if key == "repeatly" {
 		u.repeatly = value
 	} else if key == "message" {
 		u.message = value
-		u.isWaitingTyping = true
+		u.isWaitingTyping = false
 	}
 }
 
@@ -127,7 +127,7 @@ func BuildCreateJobFlex() map[string]any {
 							"action": map[string]any{
 								"type":  "datetimepicker",
 								"label": "Pick date",
-								"data":  "job:pick=date",
+								"data":  "job:pick=datetime",
 								"mode":  "datetime",
 							},
 						},
@@ -191,9 +191,13 @@ func (m *MessageProcessor) Response(event Events) {
 	if !m.isActionDone(userId) {
 		userState := m.getUserState(userId)
 		if userState.isWaitingTyping {
-			userState.Update("message", event.Message.Text)
-			userState.isWaitingTyping = false
-			msg := fmt.Sprintf("Job: name: %s, date: %s, message: %s", userState.name, userState.date, userState.message)
+			var msg string
+			if event.Type != "message" {
+				msg = fmt.Sprintf("Please type the name:")
+			} else {
+				userState.Update("message", event.Message.Text)
+				msg = fmt.Sprintf("Job: name: %s, date: %s, message: %s", userState.name, userState.date, userState.message)
+			}
 			payload := constructMessageResponse(replyToken, msg)
 			m.replyWtihMessage(payload)
 			return
@@ -225,6 +229,9 @@ func (m *MessageProcessor) responsePostback(userId string, replyToken string, po
 	if postback.Data == "job:submit=1" {
 		msg = fmt.Sprintf("Create Job: name: %s, date: %s, message: %s", userState.name, userState.date, userState.message)
 		delete(m.userIdToState, userId)
+	} else if postback.Data == "job:message=message" {
+		userState.isWaitingTyping = true
+		msg = fmt.Sprintf("Please type the name:")
 	} else {
 		for k, v := range postback.Params {
 			userState.Update(k, v)
