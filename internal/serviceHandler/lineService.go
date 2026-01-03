@@ -111,7 +111,7 @@ type Message struct {
 func (w *Webhook) PrintStat() {
 	fmt.Println("Webhook event num: ", len(w.Events))
 	for _, event := range w.Events {
-		fmt.Printf("Event: Type: %s, Mode: %s, Message: %s", event.Type, event.Mode, event.Message)
+		fmt.Printf("Event: Type: %s, Mode: %s, Message: %s, %v", event.Type, event.Mode, event.Message.Text, event.Message.Type)
 	}
 }
 
